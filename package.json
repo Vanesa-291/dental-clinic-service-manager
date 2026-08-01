@@ -1,0 +1,22 @@
+{
+  "name": "dental-clinic-service-manager",
+  "version": "8.0.0",
+  "description": "Sistema de turnos y reservas para Clínica Odontológica DentalClinic",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "echo \"Tests pendientes de implementar\" && exit 0"
+  },
+  "author": "DentalClinic",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-handlebars": "^7.1.2",
+    "mongoose": "^8.4.1",
+    "socket.io": "^4.7.5",
+    "zod": "^3.25.76"
+  }
+}
