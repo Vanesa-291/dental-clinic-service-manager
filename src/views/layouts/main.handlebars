@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{title}}</title>
+  <link rel="stylesheet" href="/css/styles.css" />
+</head>
+<body>
+  <header>
+    <h1>🦷 DentalClinic</h1>
+    <nav>
+      <a href="/views/services">Servicios</a>
+      <a href="/views/bookings">Reservas</a>
+    </nav>
+  </header>
+
+  <main>
+    {{{body}}}
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+  <footer>DentalClinic — Sistema de Turnos y Reservas &copy; 2025</footer>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/js/socket.js"></script>
+</body>
+</html>

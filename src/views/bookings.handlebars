@@ -1,0 +1,57 @@
+<section>
+  <div class="page-header">
+    <h2>📅 Reservas del Sistema</h2>
+    <span class="count-badge">{{bookings.length}} reservas</span>
+  </div>
+
+  <div class="form-panel">
+    <h3>➕ Nueva reserva</h3>
+    <form id="formNuevaReserva" class="form-grid">
+      <input id="bkName"  type="text"  placeholder="Nombre del cliente *" required />
+      <input id="bkEmail" type="email" placeholder="Email *"              required />
+      <input id="bkDate"  type="date"                                     required />
+      <input id="bkTime"  type="time"                                     required />
+      <button type="submit" class="btn-submit">Crear reserva</button>
+    </form>
+  </div>
+
+  <div id="listaReservas" class="cards-grid">
+    {{#each bookings}}
+    <div class="card">
+      <h3 class="card-title" style="margin-bottom:0.5rem;">{{clientName}}</h3>
+      <p class="card-desc">{{clientEmail}}</p>
+      <div class="card-meta" style="margin-bottom:0.5rem;">
+        <span>📅 {{date}}</span>
+        <span>🕐 {{time}}</span>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <span class="badge badge-status">{{status}}</span>
+        <span style="font-size:0.75rem; color:#718096;">{{services}} servicio(s)</span>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+
+  {{#unless bookings.length}}
+  <div class="empty-state">No hay reservas aún.</div>
+  {{/unless}}
+</section>
+
+<script>
+  document.getElementById('formNuevaReserva').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      clientName:  document.getElementById('bkName').value,
+      clientEmail: document.getElementById('bkEmail').value,
+      date:        document.getElementById('bkDate').value,
+      time:        document.getElementById('bkTime').value,
+      status:      'pendiente'
+    };
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) e.target.reset();
+  });
+</script>
