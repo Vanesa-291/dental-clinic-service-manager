@@ -1,0 +1,88 @@
+<section>
+  <div class="page-header">
+    <h2>📅 Reservas del Sistema</h2>
+    <span class="count-badge">{{bookings.length}} reservas</span>
+  </div>
+
+  <div class="form-panel">
+    <h3>➕ Nueva reserva</h3>
+    <form id="formNuevaReserva" class="form-grid">
+      <input id="bkName"  type="text"  placeholder="Nombre del cliente *" required />
+      <input id="bkEmail" type="email" placeholder="Email *"              required />
+      <input id="bkDate"  type="date"                                     required />
+      <input id="bkTime"  type="time"                                     required />
+      <button type="submit" class="btn-submit">Crear reserva</button>
+    </form>
+  </div>
+
+  <div id="listaReservas" class="cards-grid">
+    {{#each bookings}}
+    <div class="card" data-booking-id="{{_id}}">
+      <div class="card-top">
+        <h3 class="card-title">{{clientName}}</h3>
+        <button type="button" class="btn-icon-danger" onclick="deleteBooking('{{_id}}')" title="Eliminar reserva">🗑</button>
+      </div>
+      <p class="card-desc">{{clientEmail}}</p>
+      <div class="card-meta" style="margin-bottom:0.5rem;">
+        <span>📅 {{date}}</span>
+        <span>🕐 {{time}}</span>
+      </div>
+      <span class="badge badge-status">{{status}}</span>
+
+      <div class="booking-services">
+        {{#each services}}
+        <div class="booking-service-line">
+          <span class="bsl-name">{{this.service.name}}</span>
+          <span class="bsl-price">${{this.service.price}}</span>
+          <div class="qty-stepper">
+            <button type="button" onclick="changeQuantity('{{../_id}}','{{this.service._id}}',{{this.quantity}},-1)">−</button>
+            <span>{{this.quantity}}</span>
+            <button type="button" onclick="changeQuantity('{{../_id}}','{{this.service._id}}',{{this.quantity}},1)">+</button>
+          </div>
+          <button type="button" class="bsl-remove" onclick="removeService('{{../_id}}','{{this.service._id}}')" title="Quitar servicio">✕</button>
+        </div>
+        {{/each}}
+        {{#unless services.length}}
+        <p class="bsl-empty">Sin servicios asociados.</p>
+        {{/unless}}
+      </div>
+
+      <form class="add-service-form" onsubmit="return addServiceToBooking(event, '{{_id}}')">
+        <select required>
+          {{#each ../catalog}}
+          <option value="{{_id}}">{{name}} — ${{price}}</option>
+          {{/each}}
+        </select>
+        <button type="submit">+ Agregar</button>
+      </form>
+    </div>
+    {{/each}}
+  </div>
+
+  {{#unless bookings.length}}
+  <div class="empty-state">No hay reservas aún.</div>
+  {{/unless}}
+</section>
+
+<!-- Catálogo disponible para JS (lo usa socket.js al armar cards nuevas en vivo) -->
+<script id="catalog-data" type="application/json">{{{json catalog}}}</script>
+<script>
+  window.__CATALOG__ = JSON.parse(document.getElementById('catalog-data').textContent);
+
+  document.getElementById('formNuevaReserva').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      clientName:  document.getElementById('bkName').value,
+      clientEmail: document.getElementById('bkEmail').value,
+      date:        document.getElementById('bkDate').value,
+      time:        document.getElementById('bkTime').value,
+      status:      'pendiente'
+    };
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) e.target.reset();
+  });
+</script>

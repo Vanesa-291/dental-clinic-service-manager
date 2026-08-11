@@ -1,0 +1,65 @@
+<section>
+  <div class="page-header">
+    <h2>📋 Servicios Disponibles</h2>
+    <span class="count-badge">{{services.length}} servicios</span>
+  </div>
+
+  <div class="form-panel">
+    <h3>➕ Agregar nuevo servicio</h3>
+    <form id="formNuevoServicio" class="form-grid">
+      <input id="svcName"     type="text"   placeholder="Nombre *"         required />
+      <input id="svcCategory" type="text"   placeholder="Categoría *"      required />
+      <input id="svcDesc"     type="text"   placeholder="Descripción *"    required class="full-width" />
+      <input id="svcDuration" type="number" placeholder="Duración (min) *" required />
+      <input id="svcPrice"    type="number" placeholder="Precio ($) *"     required />
+      <button type="submit" class="btn-submit">Crear servicio</button>
+    </form>
+  </div>
+
+  <div id="listaServicios" class="cards-grid">
+    {{#each services}}
+    <div class="card {{#if available}}card-available{{else}}card-unavailable{{/if}}" data-service-id="{{_id}}">
+      <div class="card-top">
+        <h3 class="card-title">{{name}}</h3>
+        <span class="badge {{#if available}}badge-available{{else}}badge-unavailable{{/if}}">
+          {{#if available}}Disponible{{else}}No disponible{{/if}}
+        </span>
+      </div>
+      <p class="card-desc">{{description}}</p>
+      <div class="card-meta">
+        <span>⏱ {{duration}} min</span>
+        <span>💰 ${{price}}</span>
+        <span>🏷 {{category}}</span>
+      </div>
+      <div class="card-actions">
+        <button type="button" onclick="toggleAvailability('{{_id}}', {{available}})">🔁 Disponibilidad</button>
+        <button type="button" class="btn-danger" onclick="deleteService('{{_id}}')">🗑 Eliminar</button>
+      </div>
+    </div>
+    {{/each}}
+  </div>
+
+  {{#unless services.length}}
+  <div class="empty-state">No hay servicios cargados aún.</div>
+  {{/unless}}
+</section>
+
+<script>
+  document.getElementById('formNuevoServicio').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = {
+      name:        document.getElementById('svcName').value,
+      description: document.getElementById('svcDesc').value,
+      duration:    Number(document.getElementById('svcDuration').value),
+      price:       Number(document.getElementById('svcPrice').value),
+      category:    document.getElementById('svcCategory').value,
+      available:   true
+    };
+    const res = await fetch('/api/services', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    if (res.ok) e.target.reset();
+  });
+</script>
