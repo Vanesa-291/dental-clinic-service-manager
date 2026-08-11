@@ -1,24 +1,18 @@
-# 🦷 Sistema Backend de Turnos y Reservas — DentalClinic
+# 🦷 DentalClinic — Sistema Backend de Turnos y Reservas
 
-![Node.js](https://img.shields.io/badge/Node.js-18+-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![Express](https://img.shields.io/badge/Express-4.x-000000?style=for-the-badge&logo=express&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-Atlas-47A248?style=for-the-badge&logo=mongodb&logoColor=white)
-![Zod](https://img.shields.io/badge/Zod-Validation-3E67B1?style=for-the-badge&logo=zod&logoColor=white)
-![Socket.io](https://img.shields.io/badge/Socket.io-4.x-010101?style=for-the-badge&logo=socket.io&logoColor=white)
-![Handlebars](https://img.shields.io/badge/Handlebars-7.x-f0772b?style=for-the-badge&logo=handlebarsdotjs&logoColor=white)
-
-> **Entrega Final** — Backend completo para la gestión de servicios y reservas de una clínica odontológica.
+Sistema backend de gestión de turnos y reservas para una clínica odontológica. API REST construida con Node.js y Express, persistencia en MongoDB Atlas mediante Mongoose, actualizaciones en tiempo real con Socket.io, y vistas dinámicas renderizadas con Handlebars.
 
 ---
 
 ## 📋 Descripción
 
-Este proyecto es la versión final del **Sistema Backend de Turnos y Reservas** de DentalClinic. Es una API REST construida en capas que permite:
+DentalClinic permite administrar el catálogo de servicios odontológicos de una clínica y gestionar las reservas de turnos que los pacientes hacen sobre esos servicios. Cada reserva puede tener uno o más servicios asociados, con control de cantidad por servicio. Todos los cambios (crear, actualizar, eliminar) se reflejan en tiempo real en las vistas abiertas en el navegador, sin necesidad de recargar la página.
 
-- Administrar el catálogo de **servicios** odontológicos (crear, listar con filtros/paginación/orden, consultar, actualizar, eliminar).
-- Gestionar **reservas** de clientes: crearlas, consultarlas, asociarles servicios existentes, modificar la cantidad de cada servicio, quitar servicios puntuales, y eliminar la reserva completa.
-- Consultar la información **relacionada** entre reservas y servicios usando referencias (`ObjectId`) y `populate`, sin duplicar datos.
-- Visualizar el catálogo y las reservas desde el navegador mediante **vistas Handlebars**, que se actualizan **en vivo** con **Socket.io** al crear, editar o eliminar cualquier recurso — sin recargar la página.
+El proyecto sigue una arquitectura en capas que separa responsabilidades:
+
+```
+Router → Middleware (validación) → Controller → Service → Repository → DAO → Modelo (Mongoose)
+```
 
 ---
 
@@ -26,82 +20,87 @@ Este proyecto es la versión final del **Sistema Backend de Turnos y Reservas** 
 
 | Tecnología | Uso |
 |---|---|
-| **Node.js** (ESM) | Entorno de ejecución |
-| **Express** | Framework HTTP / enrutamiento |
-| **MongoDB Atlas** | Base de datos en la nube |
-| **Mongoose** | ODM — modelos, esquemas, `populate` |
-| **Zod** | Validación de datos de entrada |
-| **express-handlebars** | Vistas renderizadas del lado del servidor |
-| **Socket.io** | Comunicación en tiempo real |
-| **dotenv** | Variables de entorno |
+| [Node.js](https://nodejs.org/) (ESM) | Entorno de ejecución, módulos ES nativos |
+| [Express.js](https://expressjs.com/) | Framework del servidor HTTP y del ruteo |
+| [MongoDB Atlas](https://www.mongodb.com/atlas) + [Mongoose](https://mongoosejs.com/) | Base de datos y modelado de esquemas |
+| [Socket.io](https://socket.io/) | Comunicación en tiempo real (WebSockets) |
+| [express-handlebars](https://github.com/express-handlebars/express-handlebars) | Motor de plantillas para las vistas |
+| [Zod](https://zod.dev/) | Validación de datos de entrada |
+| [dotenv](https://github.com/motdotla/dotenv) | Carga de variables de entorno |
 
 ---
 
 ## 📁 Estructura del proyecto
 
 ```
-dental-clinic/
+dental-clinic-service-manager/
+│
 ├── src/
-│   ├── config/            → env.config.js (valida .env) · db.js (conexión Mongo)
-│   ├── models/             → service.model.js · booking.model.js · message.model.js
-│   ├── validators/         → esquemas de Zod (services y bookings)
-│   ├── middlewares/         → validate.middleware.js (corta el flujo con 400)
-│   ├── dao/                 → acceso directo a Mongoose (find, populate, etc.)
-│   ├── repositories/        → intermediario entre service y DAO, sin lógica de negocio
-│   ├── services/            → reglas de negocio (filtros, paginación, quantity++, etc.)
-│   ├── controllers/         → leen req, llaman al service, responden con res
-│   ├── routes/               → definen endpoints y conectan con su controller
-│   ├── views/                → services.handlebars · bookings.handlebars · layouts/main.handlebars
-│   ├── app.js                 → configuración de Express + Handlebars
-│   └── server.js              → conecta Mongo, levanta Socket.io y el servidor HTTP
+│   ├── config/
+│   │   ├── db.js                  ← Conexión a MongoDB Atlas
+│   │   └── env.config.js          ← Validación de variables de entorno al iniciar
+│   ├── models/                    ← Schemas de Mongoose (Service, Booking, Message)
+│   ├── dao/                       ← Acceso directo a los modelos de Mongoose
+│   ├── repositories/              ← Capa intermedia entre los DAO y los services
+│   ├── services/                  ← Lógica de negocio
+│   ├── validators/                ← Esquemas de validación con Zod
+│   ├── middlewares/
+│   │   └── validate.middleware.js ← Middleware genérico de validación (body / params)
+│   ├── controllers/                ← Maneja request/response y emite eventos de Socket.io
+│   ├── routes/                    ← Define los endpoints de cada recurso
+│   ├── views/                     ← Vistas Handlebars
+│   │   ├── layouts/main.handlebars
+│   │   ├── services.handlebars
+│   │   └── bookings.handlebars
+│   ├── app.js                     ← Configuración de Express (middlewares, motor de vistas, rutas)
+│   └── server.js                  ← Punto de entrada: servidor HTTP + Socket.io + conexión a Mongo
+│
 ├── public/
 │   ├── css/styles.css
-│   └── js/socket.js           → toda la lógica de tiempo real del lado del cliente
-├── .env.example
-├── .gitignore
+│   └── js/socket.js                ← Cliente de Socket.io y lógica de interacción de la UI
+│
+├── .env.example                    ← Variables de entorno requeridas (sin valores)
+├── .gitignore                      ← Excluye node_modules, .env y archivos temporales
 ├── package.json
-└── README.md
+└── README.md                       ← Este archivo
 ```
-
-**Flujo de una petición:**
-```
-Router → Controller → Service → Repository → DAO → Model (Mongoose) → MongoDB Atlas
-```
-
-Cada capa tiene una sola responsabilidad: el router solo define endpoints, el controller solo traduce HTTP ↔ JS, el service contiene las reglas de negocio, el repository es un intermediario sin lógica propia, y el DAO es el único lugar que habla directamente con Mongoose.
 
 ---
 
 ## 🚀 Instalación
 
 ### Requisitos previos
-- [Node.js](https://nodejs.org/) v18 o superior
-- Una cuenta de [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) (gratuita)
+
+- [Node.js](https://nodejs.org/) versión 18 o superior
+- Una base de datos en [MongoDB Atlas](https://www.mongodb.com/atlas) (o una instancia local de MongoDB)
 
 ### Pasos
 
-```bash
+1. **Cloná el repositorio:**
+```
 git clone https://github.com/Vanesa-291/dental-clinic-service-manager.git
 cd dental-clinic-service-manager
+```
+
+2. **Instalá las dependencias:**
+```
 npm install
 ```
+
+3. **Configurá las variables de entorno** (ver sección siguiente).
+
+4. **Ejecutá el proyecto** (ver sección Ejecución).
 
 ---
 
 ## 🔐 Variables de entorno
 
-Copiá el archivo de ejemplo:
+Creá un archivo `.env` en la raíz del proyecto, usando `.env.example` como referencia:
 
-```bash
-copy .env.example .env
 ```
-
-Y completá `.env` con tus propios valores:
-
-```env
 PORT=8080
 NODE_ENV=development
-MONGO_URI=mongodb+srv://<usuario>:<password>@<cluster>.mongodb.net/<dbname>?appName=<appName>
+MONGO_URI=tu_uri_de_mongodb_atlas
 APP_NAME=Sistema Backend de Turnos y Reservas
 ```
 
@@ -109,161 +108,159 @@ APP_NAME=Sistema Backend de Turnos y Reservas
 |---|---|
 | `PORT` | Puerto en el que corre el servidor |
 | `NODE_ENV` | Entorno de ejecución (`development` / `production`) |
-| `MONGO_URI` | Cadena de conexión a MongoDB Atlas |
-| `APP_NAME` | Nombre que se muestra en el arranque del servidor y en la ruta raíz |
+| `MONGO_URI` | Cadena de conexión a la base de datos de MongoDB Atlas |
+| `APP_NAME` | Nombre visible de la aplicación |
 
-> 🔒 El archivo `.env` **nunca** se sube al repositorio — está en `.gitignore`. Usá `.env.example` como guía.
->
-> **Nota:** usamos `NODE_ENV` (la convención estándar de Node.js) en lugar de un `APP_ENV` custom, para seguir la práctica más habitual del ecosistema.
+> ⚠️ El archivo `.env` **nunca** debe subirse al repositorio — está excluido en `.gitignore`. El servidor valida al arrancar que las 4 variables estén presentes y no inicia si falta alguna.
 
 ---
 
 ## ▶️ Ejecución
 
-```bash
-npm start       # modo normal
-npm run dev      # con recarga automática al guardar cambios
-npm test          # placeholder de tests
+```
+npm start
 ```
 
-Servidor disponible en: **http://localhost:8080**
+Con recarga automática al guardar cambios:
+```
+npm run dev
+```
 
-Vistas disponibles en el navegador:
-- **http://localhost:8080/views/services** — catálogo de servicios
-- **http://localhost:8080/views/bookings** — gestión de reservas
+Si la conexión es exitosa, la consola muestra:
+
+```
+✅ Variables de entorno validadas correctamente.
+✅ MongoDB conectado correctamente.
+══════════════════════════════════════════════════════════
+  🦷 Sistema Backend de Turnos y Reservas
+  Servidor     : http://localhost:8080
+  Arquitectura : Router → Controller → Service → Repository → DAO
+══════════════════════════════════════════════════════════
+
+```
 
 ---
 
-## 📡 Endpoints principales
+## 🔌 Endpoints principales
 
-### 🔧 Servicios (`/api/services`)
+### Servicios — `/api/services`
 
-| Método | Ruta | Descripción | Status |
-|---|---|---|---|
-| `GET` | `/api/services` | Lista con filtros, paginación y orden | 200 |
-| `GET` | `/api/services/:sid` | Servicio por ID | 200 / 404 |
-| `POST` | `/api/services` | Crear servicio (validado con Zod) | 201 / 400 |
-| `PUT` | `/api/services/:sid` | Actualizar servicio (validado con Zod) | 200 / 404 / 400 |
-| `DELETE` | `/api/services/:sid` | Eliminar servicio | 200 / 404 |
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/api/services` | Lista todos los servicios. Soporta filtros por query string: `?category=`, `?available=`, `?page=`, `?limit=`, `?sortBy=`, `?order=` |
+| `GET` | `/api/services/:sid` | Obtiene un servicio por su ID |
+| `POST` | `/api/services` | Crea un nuevo servicio |
+| `PUT` | `/api/services/:sid` | Actualiza un servicio existente |
+| `DELETE` | `/api/services/:sid` | Elimina un servicio |
 
-**Filtros, paginación y orden — todos combinables:**
+### Reservas — `/api/bookings`
 
-```
-GET /api/services?category=Cirugia&available=true
-GET /api/services?page=2&limit=5
-GET /api/services?sortBy=price&order=desc
-```
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/api/bookings` | Lista todas las reservas (con `populate` de servicios) |
+| `POST` | `/api/bookings` | Crea una nueva reserva |
+| `GET` | `/api/bookings/:bid` | Obtiene una reserva por ID (con `populate`) |
+| `DELETE` | `/api/bookings/:bid` | Elimina una reserva completa |
+| `POST` | `/api/bookings/:bid/services/:sid` | Agrega un servicio a una reserva |
+| `PUT` | `/api/bookings/:bid/services/:sid` | Actualiza la cantidad de un servicio dentro de una reserva |
+| `DELETE` | `/api/bookings/:bid/services/:sid` | Quita un servicio de una reserva |
 
-Respuesta con metadatos:
+### Mensajes — `/api/messages` *(recurso adicional)*
+
+CRUD básico de mensajes de contacto: `GET`, `GET /:mid`, `POST`, `PUT /:mid`, `DELETE /:mid`.
+
+### Vistas
+
+| Ruta | Descripción |
+|---|---|
+| `/views/services` | Catálogo de servicios, actualizado en tiempo real |
+| `/views/bookings` | Gestión de reservas, actualizada en tiempo real |
+
+### Raíz
+
+`GET /` devuelve un JSON con el mapa completo de endpoints disponibles — funciona como documentación viva de la API.
+
+---
+
+## 🗂️ Modelo de datos
+
+### Service
+
 ```json
 {
-  "payload": [ /* ... */ ],
-  "totalItems": 6,
-  "totalPages": 2,
-  "currentPage": 1,
-  "limit": 5,
-  "hasPrevPage": false,
-  "hasNextPage": true,
-  "prevPage": null,
-  "nextPage": 2
+  "_id": "66b1f2a4e2c1a4f1e8d3b201",
+  "name": "Ortodoncia",
+  "description": "Corrección de la posición dental",
+  "duration": 60,
+  "price": 15000,
+  "category": "Correctiva",
+  "available": true
 }
 ```
 
-### 📅 Reservas (`/api/bookings`)
+| Campo | Tipo | Obligatorio |
+|---|---|---|
+| `name` | String | Sí |
+| `description` | String | Sí |
+| `duration` | Number (minutos) | Sí |
+| `price` | Number | Sí |
+| `category` | String | Sí |
+| `available` | Boolean | Sí (default: `true`) |
 
-| Método | Ruta | Descripción | Status |
-|---|---|---|---|
-| `GET` | `/api/bookings` | Todas las reservas (con `populate`) | 200 |
-| `POST` | `/api/bookings` | Crear reserva (validado con Zod) | 201 / 400 |
-| `GET` | `/api/bookings/:bid` | Reserva por ID (con `populate`) | 200 / 404 |
-| `DELETE` | `/api/bookings/:bid` | Eliminar una reserva completa | 200 / 404 |
-| `POST` | `/api/bookings/:bid/services/:sid` | Agregar servicio (`quantity++` si ya estaba) | 200 / 404 |
-| `PUT` | `/api/bookings/:bid/services/:sid` | Actualizar la cantidad de un servicio | 200 / 404 / 400 |
-| `DELETE` | `/api/bookings/:bid/services/:sid` | Quitar un servicio puntual de la reserva | 200 / 404 |
+### Booking
 
-**Ejemplo — reserva con `populate`:**
 ```json
 {
-  "_id": "64f1a2b3c4d5e6f7a8b9c0d1",
-  "clientName": "María González",
+  "_id": "66b2a9c1e2c1a4f1e8d3b210",
+  "clientName": "Juan Pérez",
+  "clientEmail": "juan@email.com",
+  "date": "2026-08-20",
+  "time": "14:30",
   "status": "pendiente",
   "services": [
     {
-      "service": { "_id": "...", "name": "Ortodoncia", "price": 15000, "duration": 60 },
+      "service": { "_id": "66b1f2a4e2c1a4f1e8d3b201", "name": "Ortodoncia", "price": 15000 },
       "quantity": 2
     }
   ]
 }
 ```
 
-### 💬 Mensajes (`/api/messages`)
-CRUD completo (`GET`, `GET /:mid`, `POST`, `PUT /:mid`, `DELETE /:mid`).
+> El campo `service` dentro de `services` se guarda como referencia (`ObjectId`) y se resuelve automáticamente con `populate` en las consultas de lectura, devolviendo el objeto completo del servicio en lugar de solo su ID.
 
 ---
 
-## ✨ Funcionalidades
+## ⚙️ Funcionalidades
 
-- ✅ **CRUD completo de servicios**, con validación de Zod cortando el flujo antes de tocar MongoDB.
-- ✅ **Gestión completa de reservas**: crear, consultar, asociar servicios, **modificar cantidades**, **quitar un servicio puntual**, y **eliminar la reserva**.
-- ✅ **Filtros, paginación y ordenamiento** en `GET /api/services` vía query params.
-- ✅ **Relaciones con `ObjectId`**: las reservas nunca guardan el objeto completo del servicio, solo la referencia + `quantity`.
-- ✅ **`populate`** en la consulta de reservas (individual y en listado).
-- ✅ **Validación con Zod** en: crear/actualizar servicio, crear reserva, agregar/actualizar/quitar servicio de una reserva.
-- ✅ **Vistas con Handlebars**: catálogo de servicios y gestión de reservas, sin datos hardcodeados — todo viene de la arquitectura en capas.
-- ✅ **Socket.io en tiempo real**: crear, actualizar (incluye cambiar disponibilidad) y eliminar un servicio; crear, actualizar y eliminar una reserva — todo se refleja en el navegador sin recargar.
+- CRUD completo de servicios, con validación de datos vía Zod y mensajes de error descriptivos en español.
+- CRUD de reservas, incluyendo gestión de servicios anidados dentro de cada reserva: agregar, quitar y actualizar cantidad.
+- `populate` automático: las reservas devuelven el detalle completo de cada servicio asociado, no solo su ID.
+- Actualizaciones en tiempo real vía Socket.io: crear, actualizar o eliminar un servicio o reserva se refleja al instante en cualquier vista abierta, sin recargar la página.
+- Vistas dinámicas en Handlebars, con notificaciones tipo "toast" para cada acción.
+- Manejo centralizado de errores, con códigos de estado HTTP apropiados (`400` validación, `404` recurso inexistente, `500` error interno).
+- Arquitectura en capas que separa responsabilidades y facilita el mantenimiento y las futuras ampliaciones.
 
-### Detalle de los eventos de Socket.io
+### Eventos de Socket.io
 
-| Evento | Se dispara cuando... |
+| Evento | Se emite cuando... |
 |---|---|
 | `nuevo_servicio` | Se crea un servicio |
 | `servicio_actualizado` | Se actualiza un servicio (incluye cambios de disponibilidad) |
 | `servicio_eliminado` | Se elimina un servicio |
 | `nueva_reserva` | Se crea una reserva |
-| `reserva_actualizada` | Se agrega/quita un servicio o cambia una cantidad en una reserva |
+| `reserva_actualizada` | Se agrega o quita un servicio, o cambia su cantidad, en una reserva |
 | `reserva_eliminada` | Se elimina una reserva completa |
-
----
-
-## 🧪 Pruebas manuales sugeridas
-
-Antes de entregar, se probaron manualmente con Thunder Client:
-
-1. ✅ Crear servicio
-2. ✅ Listar servicios (con filtros/paginación/orden)
-3. ✅ Consultar servicio por id
-4. ✅ Actualizar servicio
-5. ✅ Eliminar servicio
-6. ✅ Crear reserva
-7. ✅ Consultar reserva
-8. ✅ Agregar servicio a reserva
-9. ✅ Eliminar servicio de reserva
-10. ✅ Actualizar cantidad de un servicio dentro de una reserva
-11. ✅ Eliminar reserva
-12. ✅ Consultar reserva con `populate`
-
-**Casos de error probados:**
-- Buscar un servicio inexistente → `404`
-- Crear un servicio con datos incompletos → `400` (Zod)
-- Agregar a una reserva un servicio que no existe → `404`
-- Consultar una reserva inexistente → `404`
-
-**WebSockets:** se verificó que crear un servicio desde Thunder Client, eliminar un servicio y cambiar su disponibilidad se reflejan en `/views/services` sin recargar manualmente la página (y lo mismo para reservas en `/views/bookings`).
 
 ---
 
 ## 📝 Notas adicionales
 
-- Si un servicio referenciado en una reserva es eliminado del catálogo, la vista de reservas lo omite de forma segura (referencia huérfana) en lugar de romperse; la API expone ese caso como `service: null` dentro del array.
-- La vista de servicios no implementa controles de paginación (muestra el catálogo completo); la paginación real para consumidores programáticos vive en `GET /api/services`.
-- El repositorio no incluye `node_modules`, `.env`, ni credenciales reales — solo `.env.example` como guía de configuración.
+- El archivo `.env` nunca debe subirse al repositorio (está excluido en `.gitignore`); usá `.env.example` como referencia.
+- Antes de levantar el proyecto, verificá que tu IP esté habilitada en **Network Access** de MongoDB Atlas.
+- Se recomienda probar los endpoints con Postman o Thunder Client, incluyendo casos de error: IDs inexistentes, datos incompletos y IDs con formato inválido.
+- El proyecto no incluye autenticación; queda como posible mejora futura.
+- El script `npm test` está reservado para cuando se implementen tests automatizados; por ahora es un placeholder.
 
 ---
 
-<div align="center">
-
-**Desarrollado con ❤️ para DentalClinic**
-
-*Tu Sonrisa, Nuestra Pasión* 🦷✨
-
-</div>
+*Desarrollado con ❤️ para DentalClinic — Tu Sonrisa, Nuestra Pasión*
